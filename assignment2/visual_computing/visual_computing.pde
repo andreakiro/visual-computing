@@ -1,3 +1,10 @@
+float scale = 1;
+float rx = 0;
+float ry = 0;
+
+float DIFF_ANGLE = PI/10;
+float SCALING_FACTOR = 0.05;
+
 void settings() {
   size(1000, 1000, P2D);
 }
@@ -6,18 +13,29 @@ void setup() {
 }
 
 void draw() {
+  clear();
   background(255, 255, 255);
-  My3DPoint eye = new My3DPoint(0, 0, -5000);
   My3DPoint origin = new My3DPoint(0, 0, 0);
   My3DBox input3DBox = new My3DBox(origin, 100, 150, 300);
+  My3DPoint eye = new My3DPoint(0, 0, -5000);
+  
+ input3DBox = transformBox(input3DBox, scaleMatrix(scale, scale, scale));
+ input3DBox = transformBox(input3DBox, rotateXMatrix(rx));
+ input3DBox = transformBox(input3DBox, rotateYMatrix(ry));
+
   //rotated around x
-  float[][] transform1 = rotateXMatrix(-PI/8); input3DBox = transformBox(input3DBox, transform1);
+  float[][] transform1 = rotateXMatrix(-PI/8); 
+  input3DBox = transformBox(input3DBox, transform1);
   projectBox(eye, input3DBox).render();
+  
   //rotated and translated
-  float[][] transform2 = translationMatrix(200, 200, 0); input3DBox = transformBox(input3DBox, transform2);
+  float[][] transform2 = translationMatrix(200, 200, 0); 
+  input3DBox = transformBox(input3DBox, transform2);
   projectBox(eye, input3DBox).render();
+  
   //rotated, translated, and scaled
-  float[][] transform3 = scaleMatrix(2, 2, 2); input3DBox = transformBox(input3DBox, transform3);
+  float[][] transform3 = scaleMatrix(2, 2, 2);
+  input3DBox = transformBox(input3DBox, transform3);
   projectBox(eye, input3DBox).render();
 }
 
@@ -164,4 +182,27 @@ My3DBox transformBox(My3DBox box, float[][] transformMatrix) {
     points[i] = euclidian3DPoint(matrixProduct(transformMatrix, homogeneous3DPoint(box.p[i])));
   }
   return new My3DBox(points);
+}
+
+void mouseDragged(){
+  float diff = pmouseY - mouseY;
+  scale += diff * SCALING_FACTOR;
+  if (scale > 3){
+    scale = 3;
+  }
+  else if (scale < 0.1){
+    scale = 0.1;
+  }
+}
+
+void keyPressed() { if (key == CODED) {
+  if (keyCode == UP) {
+    rx -= DIFF_ANGLE; }
+   else if (keyCode == DOWN) {
+    rx += DIFF_ANGLE; }
+   else if (keyCode == LEFT) {
+    ry -= DIFF_ANGLE; }
+   else if (keyCode == RIGHT) {
+    ry += DIFF_ANGLE; }
+}
 }
