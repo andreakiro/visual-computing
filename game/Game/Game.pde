@@ -1,17 +1,23 @@
 final float RATIO = 5;
+final int WINDOW_SIZE = 500;
 
+Mover sphere;
+
+// Box parameters
+final int PLATE_WIDTH = 150;
+final int PLATE_THICKNESS = 10;
+
+// Universe parameters
 float rx = 0;
 float rz = 0;
 float speed = 1;
-final int PLATE_WIDTH = 150;
-Mover sphere;
 
 void settings() {
-  size(500, 500, P3D);
+  size(WINDOW_SIZE, WINDOW_SIZE, P3D);
 }
 
 void setup() {
-  sphere = new Mover(new PVector(0,-10,0));
+  sphere = new Mover(new PVector(0, -(Mover.RADIUS + PLATE_THICKNESS/2), 0));
 }
 
 void draw() {
@@ -41,7 +47,7 @@ void draw() {
 void drawPlate(color c1){
   noStroke();
   fill(c1);
-  box(PLATE_WIDTH, 10, PLATE_WIDTH);
+  box(PLATE_WIDTH, PLATE_THICKNESS, PLATE_WIDTH);
 }
 
 void drawText(color c1, color c2, color c3){
