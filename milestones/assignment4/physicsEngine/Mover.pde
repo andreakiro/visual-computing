@@ -2,7 +2,7 @@ class Mover {
   PVector location;
   PVector velocity;
   final int RADIUS = 24;
-  final PVector GRAVITY = new PVector(0,0.6);
+  final PVector GRAVITY = new PVector(0,1);
    
    Mover() {
     location = new PVector(width/2, height/2);
