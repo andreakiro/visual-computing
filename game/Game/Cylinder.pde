@@ -4,7 +4,7 @@ public final class Cylinder {
   public static final float CYLINDER_BASE_SIZE = 10;
   public static final float CYLINDER_HEIGHT = 50; 
   public static final int CYLINDER_RESOLUTION = 40;
-  private final color CYLINDER_COLOR = color(255, 14, 93);
+  private final color CYLINDER_COLOR = color(50, 205, 50); // some lime green
   
   // attributes of a cylinder
   private PVector location;
