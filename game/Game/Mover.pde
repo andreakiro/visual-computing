@@ -1,7 +1,8 @@
 public final class Mover {
   
   // some constants concerning mover
-  public static final float MOVER_RADIUS = 5.0;
+  public static final float RADIUS = 5.0;
+  public static final float Y = - (Mover.RADIUS + Board.THICKNESS/2);
   private final color MOVER_COLOR = color(255, 14, 93); // some pinky nice color
   
   // attributes of mover
@@ -46,13 +47,13 @@ public final class Mover {
     fill(MOVER_COLOR);
     stroke(MOVER_COLOR);
     strokeWeight(2);
-    sphere(MOVER_RADIUS);
+    sphere(Mover.RADIUS);
     popMatrix();
   }
 
   /* check collisions with plate borders */
   void checkEdges(float width) {
-    float border = width / 2 - MOVER_RADIUS;
+    float border = width / 2 - Mover.RADIUS;
     
     if (location.x > border) {
       velocity.x = velocity.x * -1;
@@ -72,15 +73,16 @@ public final class Mover {
   }
   
   /* check collisions with cylinders borders */
-  void checkCylinderCollision(ArrayList<Cylinder> cylinders) {
-    for (Cylinder c: cylinders) {
-      PVector pos = c.getLocation();
-      PVector d = location.copy().sub(pos.copy());
-      PVector dist = new PVector(d.x, 0, d.z);
-      if (dist.mag() <= MOVER_RADIUS + Cylinder.CYLINDER_BASE_SIZE) {
+  void checkCylinderCollision(ArrayList<PVector> cylinders) {
+    PVector locationWithoutY = new PVector(location.x, 0, location.z);
+    for (PVector pos: cylinders) {
+      PVector posWithoutY = new PVector(pos.x, 0, pos.z);
+      PVector dist = locationWithoutY.copy().sub(posWithoutY); // dist(mover, cylinder) on board plane
+      if (dist.mag() <= Mover.RADIUS + Cylinder.RADIUS) {
+        location = dist.copy().normalize().mult(Mover.RADIUS + Cylinder.RADIUS).add(new PVector(pos.x, Mover.Y, pos.z));
         PVector normal = dist.normalize();
         velocity.sub(normal.mult(2*velocity.dot(normal)));
       }
     }
-  } 
+  }
 }

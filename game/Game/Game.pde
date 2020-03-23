@@ -1,13 +1,13 @@
 // universe parameters
 private float rotx = 0;
 private float rotz = 0;
-private float rotationSensitivity = 1;
+private float rotationSensitivity = 2;
 private boolean addingCylinders = false;
 
 // elements in our game
 private Board board;
 private Mover sphere;
-private ArrayList<Cylinder> cylinders;
+private Cylinder cylinder;
 
 /* settings for our game */
 void settings() {
@@ -17,10 +17,8 @@ void settings() {
 /* kind of constructor for game */
 void setup() {
   this.board = new Board();
-  this.sphere = new Mover(new PVector(0, - (5 + Board.THICKNESS/2), 0));
-  this.cylinders = new ArrayList();
-  Cylinder salut = new Cylinder(new PVector(-50, 0, -50));
-  cylinders.add(salut);
+  this.sphere = new Mover(new PVector(0, Mover.Y, 0));
+  this.cylinder = new Cylinder();
 }
 
 /* each frames draw scene */
@@ -37,7 +35,7 @@ void draw() {
     rotateZ(rotz);
     sphere.update(rotx, rotz);
     sphere.checkEdges(Board.WIDTH);
-    sphere.checkCylinderCollision(cylinders);
+    sphere.checkCylinderCollision(cylinder.getPositions());
   } else {
     // rotate plate to add cylinders
     rotateX(-PI/2);
@@ -46,16 +44,12 @@ void draw() {
   // display all elements
   board.display();
   sphere.display();
-  for (Cylinder cylinder: cylinders) {
+  for (PVector pos: cylinder.getPositions()) {
+    pushMatrix();
+    translate(pos.x, pos.y, pos.z);
     cylinder.display();
+    popMatrix();
   }
-}
-
-/* add a cylinder on board */
-void addCylinder(float x, float y, float z) {
-  PVector location = new PVector(x, y, z);
-  Cylinder cylinder = new Cylinder(location);
-  cylinders.add(cylinder);
 }
 
 void mouseDragged() {
@@ -81,7 +75,7 @@ void mouseClicked() {
       float xOnBoard = map(mouseX, leftBorder, rightBorder, -Board.WIDTH/2, Board.WIDTH/2);
       float yOnBoard =  - Board.THICKNESS / 2;
       float zOnBoard = map(mouseY, downBorder, upBorder, -Board.WIDTH/2, Board.WIDTH/2);
-      addCylinder(xOnBoard, yOnBoard, zOnBoard);
+      cylinder.addCylinder(xOnBoard, yOnBoard, zOnBoard);
     }
   }
 }
@@ -89,7 +83,7 @@ void mouseClicked() {
 void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   rotationSensitivity += 0.1*e;
-  rotationSensitivity = min(max(rotationSensitivity, 0.1), 3);
+  rotationSensitivity = min(max(rotationSensitivity, 0.5), 3);
 }
 
 void keyPressed() {
