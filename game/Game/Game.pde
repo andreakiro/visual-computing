@@ -9,7 +9,7 @@ private float rotation_sensitivity = 1;
 private boolean addingCylinders = false;
 
 // borders of the clickable region to add cylinders
-private final float minBorder = (WINDOW_SIZE - Board.PLATE_WIDTH)/2;
+private final float minBorder = (WINDOW_SIZE - Board.WIDTH)/2;
 private final float maxBorder = WINDOW_SIZE - minBorder;
 
 // elements in our game
@@ -25,17 +25,17 @@ void settings() {
 /* kind of constructor for game */
 void setup() {
   this.board = new Board();
-  this.sphere = new Mover(new PVector(0, - (5 + Board.PLATE_THICKNESS/2), 0));
+  this.sphere = new Mover(new PVector(0, - (5 + Board.THICKNESS/2), 0));
   this.cylinders = new ArrayList();
   Cylinder salut = new Cylinder(new PVector(-50, 0, -50));
   cylinders.add(salut);
-  pushMatrix();
 }
 
 /* each frames draw scene */
 void draw() {
+  // translate origin in the middle of the screen
+  translate(width/2, height/2, 0);
   background(200);
-  camera(0, 0, 300, 0, 0, 0, 0, 1, 0);
   directionalLight(50, 100, 125, 0, -1, 0);
   ambientLight(102, 102, 102);
  
@@ -44,7 +44,7 @@ void draw() {
     rotateX(rx);
     rotateZ(rz);
     sphere.update(rx, rz);
-    sphere.checkEdges(Board.PLATE_WIDTH);
+    sphere.checkEdges(Board.WIDTH);
     sphere.checkCylinderCollision(cylinders);
   } else {
     // rotate plate to add cylinders
@@ -60,11 +60,8 @@ void draw() {
 }
 
 /* add a cylinder on board */
-void addCylinder(float x, float y) {
-  float xOnBoard = map(x, minBorder, maxBorder, -Board.PLATE_WIDTH/2, Board.PLATE_WIDTH/2);
-  float yOnBoard =  - Board.PLATE_THICKNESS / 2;
-  float zOnBoard = map(y, minBorder, maxBorder, -Board.PLATE_WIDTH/2, Board.PLATE_WIDTH/2);
-  PVector location = new PVector(xOnBoard, yOnBoard, zOnBoard);
+void addCylinder(float x, float y, float z) {
+  PVector location = new PVector(x, y, z);
   Cylinder cylinder = new Cylinder(location);
   cylinders.add(cylinder);
 }
@@ -81,7 +78,10 @@ void mouseDragged() {
 void mouseClicked() {
   if (addingCylinders) {
     if (minBorder < mouseX && mouseX < maxBorder && minBorder < mouseY && mouseY < maxBorder) {
-      addCylinder(mouseX, mouseY);
+      float xOnBoard = map(mouseX, minBorder, maxBorder, -Board.WIDTH/2, Board.WIDTH/2);
+      float yOnBoard =  - Board.THICKNESS / 2;
+      float zOnBoard = map(mouseY, minBorder, maxBorder, -Board.WIDTH/2, Board.WIDTH/2);
+      addCylinder(xOnBoard, yOnBoard, zOnBoard);
     }
   }
 }
@@ -96,8 +96,6 @@ void keyPressed() {
   if (key == CODED) {
     if (keyCode == SHIFT) {
       addingCylinders = true;
-      popMatrix();
-      pushMatrix();
     }
   }
 }
