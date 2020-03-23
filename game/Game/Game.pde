@@ -1,16 +1,8 @@
-// setup parameters
-private final float RATIO = 5;
-private final int WINDOW_SIZE = 500;
-
 // universe parameters
-private float rx = 0;
-private float rz = 0;
-private float rotation_sensitivity = 1;
+private float rotx = 0;
+private float rotz = 0;
+private float rotationSensitivity = 1;
 private boolean addingCylinders = false;
-
-// borders of the clickable region to add cylinders
-private final float minBorder = (WINDOW_SIZE - Board.WIDTH)/2;
-private final float maxBorder = WINDOW_SIZE - minBorder;
 
 // elements in our game
 private Board board;
@@ -19,7 +11,7 @@ private ArrayList<Cylinder> cylinders;
 
 /* settings for our game */
 void settings() {
-  size(WINDOW_SIZE, WINDOW_SIZE, P3D);
+  size(500, 500, P3D);
 }
 
 /* kind of constructor for game */
@@ -41,9 +33,9 @@ void draw() {
  
   if (! addingCylinders) {
     // rotate all objects in the game and play
-    rotateX(rx);
-    rotateZ(rz);
-    sphere.update(rx, rz);
+    rotateX(rotx);
+    rotateZ(rotz);
+    sphere.update(rotx, rotz);
     sphere.checkEdges(Board.WIDTH);
     sphere.checkCylinderCollision(cylinders);
   } else {
@@ -68,19 +60,27 @@ void addCylinder(float x, float y, float z) {
 
 void mouseDragged() {
   if (!addingCylinders) {
-    float clampedMouseY = min(max(mouseY, rotation_sensitivity*height/RATIO), height - rotation_sensitivity*height/RATIO);
-    float clampedMouseX = min(max(mouseX, rotation_sensitivity*width/RATIO), width - rotation_sensitivity*width/RATIO);
-    rx = map(clampedMouseY, rotation_sensitivity*height/RATIO, height - rotation_sensitivity*height/RATIO, PI/3, -PI/3);
-    rz = map(clampedMouseX, rotation_sensitivity*width/RATIO, width - rotation_sensitivity*width/RATIO, -PI/3, PI/3);
+    float minLength = min(width, height);
+    float rz = map(mouseX - pmouseX, -minLength, minLength, -PI/3, PI/3);
+    float rx = map(mouseY - pmouseY, -minLength, minLength, PI/3, -PI/3);
+    rotx += rx * rotationSensitivity;
+    rotz += rz * rotationSensitivity;
+    rotx = min(max(-PI/3, rotx), PI/3);
+    rotz = min(max(-PI/3, rotz), PI/3);
   }
 }
 
 void mouseClicked() {
   if (addingCylinders) {
-    if (minBorder < mouseX && mouseX < maxBorder && minBorder < mouseY && mouseY < maxBorder) {
-      float xOnBoard = map(mouseX, minBorder, maxBorder, -Board.WIDTH/2, Board.WIDTH/2);
+    // borders of the clickable region to add cylinders
+    float leftBorder = (width - Board.WIDTH)/2;
+    float rightBorder = width - leftBorder;
+    float downBorder = (height - Board.WIDTH)/2;
+    float upBorder = height - downBorder;
+    if (leftBorder < mouseX && mouseX < rightBorder && downBorder < mouseY && mouseY < upBorder) {
+      float xOnBoard = map(mouseX, leftBorder, rightBorder, -Board.WIDTH/2, Board.WIDTH/2);
       float yOnBoard =  - Board.THICKNESS / 2;
-      float zOnBoard = map(mouseY, minBorder, maxBorder, -Board.WIDTH/2, Board.WIDTH/2);
+      float zOnBoard = map(mouseY, downBorder, upBorder, -Board.WIDTH/2, Board.WIDTH/2);
       addCylinder(xOnBoard, yOnBoard, zOnBoard);
     }
   }
@@ -88,8 +88,8 @@ void mouseClicked() {
 
 void mouseWheel(MouseEvent event) {
   float e = event.getCount();
-  rotation_sensitivity += 0.1*e;
-  rotation_sensitivity = min(max(rotation_sensitivity, 0.1), (RATIO/2)-0.1);
+  rotationSensitivity += 0.1*e;
+  rotationSensitivity = min(max(rotationSensitivity, 0.1), 3);
 }
 
 void keyPressed() {
