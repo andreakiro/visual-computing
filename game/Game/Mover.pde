@@ -88,4 +88,8 @@ public final class Mover {
     }
     return result;
   }
+  
+  PVector getLocation() {
+    return location.copy();
+  }
 }

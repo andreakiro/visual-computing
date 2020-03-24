@@ -2,19 +2,21 @@ class ParticleSystem {
   
   private PVector origin;
   private Cylinder particles;
-  private final float particleRadius = 10;
   private boolean active;
   private final float INTERVAL = 0.5;
   private int frameCounter;
+  private final PShape shapeOnOrigin;
+  private final int SCALE_SHAPE = 20;
   
-  ParticleSystem() {
+  ParticleSystem(PShape s) {
     this.origin = new PVector(0, 0, 0);
     this.particles = new Cylinder();
     this.active = false;
     this.frameCounter = 0;
+    this.shapeOnOrigin = s;
   }
   
-  void addParticle() {
+  void addParticle(Mover m) {
     PVector center;
     int numAttempts = 100;
     
@@ -23,9 +25,9 @@ class ParticleSystem {
       center = particles.getPositions().get(index).copy();
       
       float angle = random(TWO_PI);
-      center.x += sin(angle) * 2*particleRadius;
-      center.z += cos(angle) * 2*particleRadius;
-      if (checkPosition(center)) {
+      center.x += sin(angle) * 2*Cylinder.RADIUS;
+      center.z += cos(angle) * 2*Cylinder.RADIUS;
+      if (checkPosition(center) && m.getLocation().sub(center).mag() > Mover.RADIUS + Cylinder.RADIUS) {
         particles.addCylinder(center);
         break;
       }
@@ -53,7 +55,7 @@ class ParticleSystem {
       }
       frameCounter += 1;
       if (frameCounter >= frameRate * INTERVAL) {
-        addParticle();
+        addParticle(m);
         frameCounter = 0;
       }
     }
@@ -86,6 +88,11 @@ class ParticleSystem {
         pushMatrix();
         translate(pos.x, pos.y, pos.z);
         particles.display();
+        if (pos == origin) {
+          translate(0, -Cylinder.RADIUS, 0);
+          scale(SCALE_SHAPE, -SCALE_SHAPE, SCALE_SHAPE);
+          shape(shapeOnOrigin);
+        }
         popMatrix();
       }    
     }

@@ -18,7 +18,7 @@ void settings() {
 void setup() {
   this.board = new Board();
   this.sphere = new Mover(new PVector(0, Mover.Y, 0));
-  this.ps = new ParticleSystem();
+  this.ps = new ParticleSystem(loadShape("robotnik.obj"));
 }
 
 /* each frames draw scene */
@@ -36,7 +36,7 @@ void draw() {
     rotateZ(rotz);
     sphere.update(rotx, rotz);
     sphere.checkEdges(Board.WIDTH);
-    sphere.checkCylinderCollision(ps.getParticles().getPositions());
+    //sphere.checkCylinderCollision(ps.getParticles().getPositions());
     ps.run(sphere);
   } else {
     // rotate plate to add cylinders
