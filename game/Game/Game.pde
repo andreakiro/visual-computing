@@ -2,12 +2,12 @@
 private float rotx = 0;
 private float rotz = 0;
 private float rotationSensitivity = 2;
-private boolean addingCylinders = false;
+private boolean addingPS = false;
 
 // elements in our game
 private Board board;
 private Mover sphere;
-private Cylinder cylinder;
+private ParticleSystem ps;
 
 /* settings for our game */
 void settings() {
@@ -18,42 +18,40 @@ void settings() {
 void setup() {
   this.board = new Board();
   this.sphere = new Mover(new PVector(0, Mover.Y, 0));
-  this.cylinder = new Cylinder();
+  this.ps = new ParticleSystem();
 }
 
 /* each frames draw scene */
 void draw() {
   // translate origin in the middle of the screen
   translate(width/2, height/2, 0);
+  rotateX(-PI/5);
   background(200);
   directionalLight(50, 100, 125, 0, -1, 0);
   ambientLight(102, 102, 102);
  
-  if (! addingCylinders) {
+  if (! addingPS) {
     // rotate all objects in the game and play
     rotateX(rotx);
     rotateZ(rotz);
     sphere.update(rotx, rotz);
     sphere.checkEdges(Board.WIDTH);
-    sphere.checkCylinderCollision(cylinder.getPositions());
+    sphere.checkCylinderCollision(ps.getParticles().getPositions());
+    ps.run(sphere);
   } else {
     // rotate plate to add cylinders
+    rotateX(PI/5);
     rotateX(-PI/2);
   }
   
   // display all elements
   board.display();
   sphere.display();
-  for (PVector pos: cylinder.getPositions()) {
-    pushMatrix();
-    translate(pos.x, pos.y, pos.z);
-    cylinder.display();
-    popMatrix();
-  }
+  ps.display();
 }
 
 void mouseDragged() {
-  if (!addingCylinders) {
+  if (!addingPS) {
     float minLength = min(width, height);
     float rz = map(mouseX - pmouseX, -minLength, minLength, -PI/3, PI/3);
     float rx = map(mouseY - pmouseY, -minLength, minLength, PI/3, -PI/3);
@@ -65,7 +63,7 @@ void mouseDragged() {
 }
 
 void mouseClicked() {
-  if (addingCylinders) {
+  if (addingPS) {
     // borders of the clickable region to add cylinders
     float leftBorder = (width - Board.WIDTH)/2;
     float rightBorder = width - leftBorder;
@@ -75,7 +73,7 @@ void mouseClicked() {
       float xOnBoard = map(mouseX, leftBorder, rightBorder, -Board.WIDTH/2, Board.WIDTH/2);
       float yOnBoard =  - Board.THICKNESS / 2;
       float zOnBoard = map(mouseY, downBorder, upBorder, -Board.WIDTH/2, Board.WIDTH/2);
-      cylinder.addCylinder(xOnBoard, yOnBoard, zOnBoard);
+      this.ps.setActive(new PVector(xOnBoard, yOnBoard, zOnBoard));
     }
   }
 }
@@ -89,7 +87,7 @@ void mouseWheel(MouseEvent event) {
 void keyPressed() {
   if (key == CODED) {
     if (keyCode == SHIFT) {
-      addingCylinders = true;
+      addingPS = true;
     }
   }
 }
@@ -97,7 +95,7 @@ void keyPressed() {
 void keyReleased() {
   if (key == CODED) {
     if (keyCode == SHIFT) {
-      addingCylinders = false;
+      addingPS = false;
     }
   }
 }

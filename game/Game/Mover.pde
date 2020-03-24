@@ -73,8 +73,9 @@ public final class Mover {
   }
   
   /* check collisions with cylinders borders */
-  void checkCylinderCollision(ArrayList<PVector> cylinders) {
+  int checkCylinderCollision(ArrayList<PVector> cylinders) {
     PVector locationWithoutY = new PVector(location.x, 0, location.z);
+    int result = -1;
     for (PVector pos: cylinders) {
       PVector posWithoutY = new PVector(pos.x, 0, pos.z);
       PVector dist = locationWithoutY.copy().sub(posWithoutY); // dist(mover, cylinder) on board plane
@@ -82,7 +83,9 @@ public final class Mover {
         location = dist.copy().normalize().mult(Mover.RADIUS + Cylinder.RADIUS).add(new PVector(pos.x, Mover.Y, pos.z));
         PVector normal = dist.normalize();
         velocity.sub(normal.mult(2*velocity.dot(normal)));
+        result = cylinders.indexOf(pos);
       }
     }
+    return result;
   }
 }

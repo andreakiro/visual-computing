@@ -2,7 +2,7 @@ public final class Cylinder {
   
   // some constants concerning cylinders
   public static final float RADIUS = 10;
-  public static final float HEIGHT = 50; 
+  public static final float HEIGHT = 10; 
   public static final int RESOLUTION = 40;
   private final color CYLINDER_COLOR = color(50, 205, 50); // some lime green
   
@@ -82,8 +82,7 @@ public final class Cylinder {
   }
   
   /* add a cylinder on board */
-  void addCylinder(float x, float y, float z) {
-    PVector location = new PVector(x, y, z);
+  void addCylinder(PVector location) {
     positions.add(location);
   }
   
