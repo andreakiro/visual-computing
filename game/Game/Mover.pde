@@ -11,7 +11,7 @@ public final class Mover {
   private PVector gravity;
   
   // some physics constants
-  public static final float GRAVITY_CONSTANT = 0.05;
+  public static final float GRAVITY_CONSTANT = 0.1;
   public static final float NORMAL_FORCE = 1;
   public static final float MU = 0.01;
   

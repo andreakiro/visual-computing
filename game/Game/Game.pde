@@ -25,7 +25,7 @@ void setup() {
 void draw() {
   // translate origin in the middle of the screen
   translate(width/2, height/2, 0);
-  rotateX(-PI/5);
+  //rotateX(-PI/5);
   background(200);
   directionalLight(50, 100, 125, 0, -1, 0);
   ambientLight(102, 102, 102);
@@ -36,11 +36,10 @@ void draw() {
     rotateZ(rotz);
     sphere.update(rotx, rotz);
     sphere.checkEdges(Board.WIDTH);
-    //sphere.checkCylinderCollision(ps.getParticles().getPositions());
     ps.run(sphere);
   } else {
     // rotate plate to add cylinders
-    rotateX(PI/5);
+    //rotateX(PI/5);
     rotateX(-PI/2);
   }
   
