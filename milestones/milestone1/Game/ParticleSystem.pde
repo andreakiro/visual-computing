@@ -35,7 +35,7 @@ class ParticleSystem {
   }
   
   boolean checkPosition(PVector center) {
-    if (! (- Board.WIDTH / 2 < center.x && center.x < Board.WIDTH / 2 && - Board.WIDTH / 2 < center.z && center.z < Board.WIDTH / 2)) return false;
+    if (! (- Board.WIDTH / 2 + Cylinder.RADIUS < center.x  && center.x < Board.WIDTH / 2 - Cylinder.RADIUS && - Board.WIDTH / 2 + Cylinder.RADIUS < center.z  && center.z  < Board.WIDTH / 2 - Cylinder.RADIUS)) return false;
     for (PVector pos: particles.getPositions()) {
       if (checkOverlap(center, pos)) return false;
     }
