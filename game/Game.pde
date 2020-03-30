@@ -27,7 +27,7 @@ void draw() {
   translate(width/2, height/2, 0);
   //rotateX(-PI/5);
   background(200);
-  directionalLight(50, 100, 125, 0, -1, 0);
+  directionalLight(50, 100, 125, 0, 1, 0);
   ambientLight(102, 102, 102);
  
   if (! addingPS) {
