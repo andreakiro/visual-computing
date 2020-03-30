@@ -69,9 +69,11 @@ void mouseClicked() {
     float downBorder = (height - Board.WIDTH)/2;
     float upBorder = height - downBorder;
     if (leftBorder < mouseX && mouseX < rightBorder && downBorder < mouseY && mouseY < upBorder) {
-      float xOnBoard = map(mouseX, leftBorder, rightBorder, -Board.WIDTH/2, Board.WIDTH/2);
+      float clampedMouseX = min(max(mouseX, leftBorder + Cylinder.RADIUS), rightBorder - Cylinder.RADIUS);
+      float clampedMouseY = min(max(mouseY, downBorder + Cylinder.RADIUS), upBorder - Cylinder.RADIUS);
+      float xOnBoard = map(clampedMouseX, leftBorder, rightBorder, -Board.WIDTH/2, Board.WIDTH/2);
       float yOnBoard =  - Board.THICKNESS / 2;
-      float zOnBoard = map(mouseY, downBorder, upBorder, -Board.WIDTH/2, Board.WIDTH/2);
+      float zOnBoard = map(clampedMouseY, downBorder, upBorder, -Board.WIDTH/2, Board.WIDTH/2);
       this.ps.setActive(new PVector(xOnBoard, yOnBoard, zOnBoard));
     }
   }
