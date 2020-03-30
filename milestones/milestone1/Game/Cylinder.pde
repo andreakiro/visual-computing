@@ -23,7 +23,7 @@ public final class Cylinder {
     
     // apply color to cylinder
     fill(CYLINDER_COLOR);
-    stroke(CYLINDER_COLOR);
+    noStroke();
     
     // get the x and y position on a circle for all the sides
     float[] xCircle = new float[Cylinder.RESOLUTION + 1]; 
