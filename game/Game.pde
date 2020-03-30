@@ -27,8 +27,8 @@ void draw() {
   translate(width/2, height/2, 0);
   //rotateX(-PI/5);
   background(200);
-  directionalLight(50, 100, 125, 0, 1, 0);
-  ambientLight(102, 102, 102);
+  directionalLight(50, 50, 50, 0, 1, 0);
+  ambientLight(190, 190, 190);
  
   if (! addingPS) {
     // rotate all objects in the game and play
