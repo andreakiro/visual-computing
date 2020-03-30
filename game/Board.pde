@@ -9,9 +9,9 @@ public final class Board {
   Board() {}
   
   /* display board */
-  void display() {
-    noStroke();
-    fill(BOARD_COLOR);
-    box(WIDTH, THICKNESS, WIDTH);
+  void display(PGraphics surf) {
+    surf.noStroke();
+    surf.fill(BOARD_COLOR);
+    surf.box(WIDTH, THICKNESS, WIDTH);
   }
 }

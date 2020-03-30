@@ -75,9 +75,9 @@ public final class Cylinder {
   }
   
   /* display cylinder */
-  void display() {
+  void display(PGraphics surf) {
     for(PShape s : fullCylinder) {
-      shape(s);
+      surf.shape(s);
     }
   }
   

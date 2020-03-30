@@ -41,14 +41,14 @@ public final class Mover {
   }
 
   /* display mover on screen */
-  void display() {
-    pushMatrix();
-    translate(location.x, location.y, location.z);
-    fill(MOVER_COLOR);
-    stroke(MOVER_COLOR);
-    strokeWeight(2);
-    sphere(Mover.RADIUS);
-    popMatrix();
+  void display(PGraphics surf) {
+    surf.pushMatrix();
+    surf.translate(location.x, location.y, location.z);
+    surf.fill(MOVER_COLOR);
+    surf.stroke(MOVER_COLOR);
+    surf.strokeWeight(2);
+    surf.sphere(Mover.RADIUS);
+    surf.popMatrix();
   }
 
   /* check collisions with plate borders */
@@ -91,5 +91,9 @@ public final class Mover {
   
   PVector getLocation() {
     return location.copy();
+  }
+  
+  float getVelocityMag() {
+    return velocity.mag();
   }
 }

@@ -8,14 +8,29 @@ private boolean addingPS = false;
 private Board board;
 private Mover sphere;
 private ParticleSystem ps;
+private Score score;
+private BarChart chart;
+
+PGraphics gameSurface;
+PGraphics stats;
+PGraphics scoreboard;
+PGraphics barChart;
+
+private final int SCORE_BOARD_HEIGHT = 200;
 
 /* settings for our game */
 void settings() {
-  size(500, 500, P3D);
+  size(700, 700, P3D);
 }
 
 /* kind of constructor for game */
 void setup() {
+  gameSurface = createGraphics(width, height - SCORE_BOARD_HEIGHT, P3D);
+  stats = createGraphics(width, SCORE_BOARD_HEIGHT, P2D);
+  scoreboard = createGraphics(SCORE_BOARD_HEIGHT, SCORE_BOARD_HEIGHT, P2D);
+  barChart = createGraphics(width - SCORE_BOARD_HEIGHT * 2, SCORE_BOARD_HEIGHT, P2D);
+  score = new Score();
+  chart = new BarChart(score, barChart.height / 2);
   this.board = new Board();
   this.sphere = new Mover(new PVector(0, Mover.Y, 0));
   this.ps = new ParticleSystem(loadShape("robotnik.obj"));
@@ -23,30 +38,96 @@ void setup() {
 
 /* each frames draw scene */
 void draw() {
+  drawGame();
+  image(gameSurface, 0, 0);
+  
+  drawStats();
+  image(stats, 0, height - SCORE_BOARD_HEIGHT);
+  
+  drawScoreBoard();
+  image(scoreboard, SCORE_BOARD_HEIGHT, height - SCORE_BOARD_HEIGHT);
+  
+  drawBarChart();
+  image(barChart, SCORE_BOARD_HEIGHT * 2, height - SCORE_BOARD_HEIGHT);
+}
+
+void drawGame() {
+  gameSurface.beginDraw();
+  
   // translate origin in the middle of the screen
-  translate(width/2, height/2, 0);
+  gameSurface.translate(width/2, height/2, 0);
   //rotateX(-PI/5);
-  background(200);
-  directionalLight(50, 50, 50, 0, 1, 0);
-  ambientLight(190, 190, 190);
+  gameSurface.background(200);
+  gameSurface.directionalLight(50, 50, 50, 0, 1, 0);
+  gameSurface.ambientLight(190, 190, 190);
  
   if (! addingPS) {
     // rotate all objects in the game and play
-    rotateX(rotx);
-    rotateZ(rotz);
+    gameSurface.rotateX(rotx);
+    gameSurface.rotateZ(rotz);
     sphere.update(rotx, rotz);
     sphere.checkEdges(Board.WIDTH);
-    ps.run(sphere);
+    ps.run(sphere, score);
+    chart.update();
   } else {
     // rotate plate to add cylinders
     //rotateX(PI/5);
-    rotateX(-PI/2);
+    gameSurface.rotateX(-PI/2);
   }
   
   // display all elements
-  board.display();
-  sphere.display();
-  ps.display();
+  board.display(gameSurface);
+  sphere.display(gameSurface);
+  ps.display(gameSurface);
+  
+  gameSurface.endDraw();
+}
+
+void drawStats() {
+  stats.beginDraw();
+  stats.background(150);
+  
+  // Map
+  stats.fill(color(10, 100, 200));
+  stats.noStroke();
+  stats.rect(0, 0, SCORE_BOARD_HEIGHT, SCORE_BOARD_HEIGHT);
+  
+  for(PVector pos: ps.getParticles().getPositions()) {
+    if (pos.x == ps.getOrigin().x && pos.z == ps.getOrigin().z) {
+      stats.fill(color(200, 0, 0));
+    } else {
+      stats.fill(color(255, 255, 255));
+    }
+    float mapX = map(pos.x, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT); 
+    float mapY = map(pos.z, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT); 
+    stats.circle(mapX, mapY, 2 * SCORE_BOARD_HEIGHT * Cylinder.RADIUS / Board.WIDTH);
+  }
+  
+  stats.fill(color(0, 0, 255));
+  float mapX = map(sphere.getLocation().x, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT);
+  float mapY = map(sphere.getLocation().z, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT);
+  stats.circle(mapX, mapY, 2 * SCORE_BOARD_HEIGHT * Mover.RADIUS / Board.WIDTH);
+  
+  stats.endDraw();
+}
+
+void drawScoreBoard() {
+  scoreboard.beginDraw();
+  scoreboard.background(color(225, 225, 225));
+  scoreboard.fill(color(0, 0, 0));
+  scoreboard.textAlign(LEFT, TOP);
+  scoreboard.text("Total Score:\n" + score.getScore(), 10, 10);
+  scoreboard.text("Velocity\n" + sphere.getVelocityMag(), 10, 50);
+  scoreboard.text("Last Score:\n" + score.getLastScore(), 10, 100);
+  scoreboard.endDraw();
+}
+
+void drawBarChart() {
+  barChart.beginDraw();
+  barChart.background(color(12, 132, 122));
+  barChart.fill(color(0, 0, 0));
+  chart.display(barChart);
+  barChart.endDraw();
 }
 
 void mouseDragged() {

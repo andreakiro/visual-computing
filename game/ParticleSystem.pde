@@ -1,4 +1,4 @@
-class ParticleSystem {
+public final class ParticleSystem {
   
   private PVector origin;
   private Cylinder particles;
@@ -46,15 +46,17 @@ class ParticleSystem {
     return c1.copy().sub(c2).mag() < Cylinder.RADIUS * 2;
   }
   
-  void run(Mover m) {
+  void run(Mover m, Score score) {
     if (active) {
       int collision = m.checkCylinderCollision(particles.getPositions());
       if (collision != -1) {
+        score.hitCylinder(m.getVelocityMag());
         if (collision == 0) setInactive();
         else particles.getPositions().remove(collision);
       }
       frameCounter += 1;
       if (frameCounter >= frameRate * INTERVAL) {
+        score.addedCylinder();
         addParticle(m);
         frameCounter = 0;
       }
@@ -82,19 +84,23 @@ class ParticleSystem {
     return particles;
   }
   
-  void display() {
+  void display(PGraphics surf) {
     if (active) {
       for (PVector pos: particles.getPositions()) {
-        pushMatrix();
-        translate(pos.x, pos.y, pos.z);
-        particles.display();
+        surf.pushMatrix();
+        surf.translate(pos.x, pos.y, pos.z);
+        particles.display(surf);
         if (pos == origin) {
-          translate(0, -Cylinder.RADIUS, 0);
-          scale(SCALE_SHAPE, -SCALE_SHAPE, SCALE_SHAPE);
-          shape(shapeOnOrigin);
+          surf.translate(0, -Cylinder.RADIUS, 0);
+          surf.scale(SCALE_SHAPE, -SCALE_SHAPE, SCALE_SHAPE);
+          surf.shape(shapeOnOrigin);
         }
-        popMatrix();
+        surf.popMatrix();
       }    
     }
+  }
+  
+  PVector getOrigin() {
+    return origin.copy();
   }
 }
