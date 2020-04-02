@@ -12,11 +12,11 @@ private Score score;
 private BarChart chart;
 
 PGraphics gameSurface;
-PGraphics stats;
+PGraphics minimap;
 PGraphics scoreboard;
 PGraphics barChart;
 
-private final int SCORE_BOARD_HEIGHT = 200;
+private final int SCORE_BOARD_HEIGHT = 150;
 
 /* settings for our game */
 void settings() {
@@ -26,11 +26,11 @@ void settings() {
 /* kind of constructor for game */
 void setup() {
   gameSurface = createGraphics(width, height - SCORE_BOARD_HEIGHT, P3D);
-  stats = createGraphics(width, SCORE_BOARD_HEIGHT, P2D);
+  minimap = createGraphics(SCORE_BOARD_HEIGHT, SCORE_BOARD_HEIGHT, P2D);
   scoreboard = createGraphics(SCORE_BOARD_HEIGHT, SCORE_BOARD_HEIGHT, P2D);
   barChart = createGraphics(width - SCORE_BOARD_HEIGHT * 2, SCORE_BOARD_HEIGHT, P2D);
   score = new Score();
-  chart = new BarChart(score, barChart.height / 2);
+  chart = new BarChart(score, barChart.width, barChart.height);
   this.board = new Board();
   this.sphere = new Mover(new PVector(0, Mover.Y, 0));
   this.ps = new ParticleSystem(loadShape("robotnik.obj"));
@@ -41,8 +41,8 @@ void draw() {
   drawGame();
   image(gameSurface, 0, 0);
   
-  drawStats();
-  image(stats, 0, height - SCORE_BOARD_HEIGHT);
+  drawMiniMap();
+  image(minimap, 0, height - SCORE_BOARD_HEIGHT);
   
   drawScoreBoard();
   image(scoreboard, SCORE_BOARD_HEIGHT, height - SCORE_BOARD_HEIGHT);
@@ -83,32 +83,32 @@ void drawGame() {
   gameSurface.endDraw();
 }
 
-void drawStats() {
-  stats.beginDraw();
-  stats.background(150);
+void drawMiniMap() {
+  minimap.beginDraw();
+  minimap.background(150);
   
   // Map
-  stats.fill(color(10, 100, 200));
-  stats.noStroke();
-  stats.rect(0, 0, SCORE_BOARD_HEIGHT, SCORE_BOARD_HEIGHT);
+  minimap.fill(color(10, 100, 200));
+  minimap.noStroke();
+  minimap.rect(0, 0, SCORE_BOARD_HEIGHT, SCORE_BOARD_HEIGHT);
   
   for(PVector pos: ps.getParticles().getPositions()) {
     if (pos.x == ps.getOrigin().x && pos.z == ps.getOrigin().z) {
-      stats.fill(color(200, 0, 0));
+      minimap.fill(color(200, 0, 0));
     } else {
-      stats.fill(color(255, 255, 255));
+      minimap.fill(color(255, 255, 255));
     }
     float mapX = map(pos.x, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT); 
     float mapY = map(pos.z, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT); 
-    stats.circle(mapX, mapY, 2 * SCORE_BOARD_HEIGHT * Cylinder.RADIUS / Board.WIDTH);
+    minimap.circle(mapX, mapY, 2 * SCORE_BOARD_HEIGHT * Cylinder.RADIUS / Board.WIDTH);
   }
   
-  stats.fill(color(0, 0, 255));
+  minimap.fill(color(0, 0, 255));
   float mapX = map(sphere.getLocation().x, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT);
   float mapY = map(sphere.getLocation().z, -Board.WIDTH/2, Board.WIDTH/2, 0, SCORE_BOARD_HEIGHT);
-  stats.circle(mapX, mapY, 2 * SCORE_BOARD_HEIGHT * Mover.RADIUS / Board.WIDTH);
+  minimap.circle(mapX, mapY, 2 * SCORE_BOARD_HEIGHT * Mover.RADIUS / Board.WIDTH);
   
-  stats.endDraw();
+  minimap.endDraw();
 }
 
 void drawScoreBoard() {
@@ -131,7 +131,7 @@ void drawBarChart() {
 }
 
 void mouseDragged() {
-  if (!addingPS) {
+  if (!addingPS && !chart.getScrollbarLocked()) {
     float minLength = min(width, height);
     float rz = map(mouseX - pmouseX, -minLength, minLength, -PI/3, PI/3);
     float rx = map(mouseY - pmouseY, -minLength, minLength, PI/3, -PI/3);
@@ -155,7 +155,12 @@ void mouseClicked() {
       float xOnBoard = map(clampedMouseX, leftBorder, rightBorder, -Board.WIDTH/2, Board.WIDTH/2);
       float yOnBoard =  - Board.THICKNESS / 2;
       float zOnBoard = map(clampedMouseY, downBorder, upBorder, -Board.WIDTH/2, Board.WIDTH/2);
-      this.ps.setActive(new PVector(xOnBoard, yOnBoard, zOnBoard));
+      PVector psLocation = new PVector(xOnBoard, yOnBoard, zOnBoard);
+      PVector diff = new PVector(psLocation.x, 0, psLocation.z).sub(new PVector(sphere.getLocation().x, 0, sphere.getLocation().z));
+      if (diff.mag() < Mover.RADIUS + Cylinder.RADIUS) {
+        psLocation = diff.normalize().mult(Mover.RADIUS + Cylinder.RADIUS + 1).add(new PVector(sphere.getLocation().x, yOnBoard, sphere.getLocation().z));
+      }
+      this.ps.setActive(psLocation);
     }
   }
 }

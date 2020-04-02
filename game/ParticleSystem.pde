@@ -16,7 +16,7 @@ public final class ParticleSystem {
     this.shapeOnOrigin = s;
   }
   
-  void addParticle(Mover m) {
+  boolean addParticle(Mover m) {
     PVector center;
     int numAttempts = 100;
     
@@ -29,9 +29,10 @@ public final class ParticleSystem {
       center.z += cos(angle) * 2*Cylinder.RADIUS;
       if (checkPosition(center) && m.getLocation().sub(center).mag() > Mover.RADIUS + Cylinder.RADIUS) {
         particles.addCylinder(center);
-        break;
+        return true;
       }
     }
+    return false;
   }
   
   boolean checkPosition(PVector center) {
@@ -56,8 +57,9 @@ public final class ParticleSystem {
       }
       frameCounter += 1;
       if (frameCounter >= frameRate * INTERVAL) {
-        score.addedCylinder();
-        addParticle(m);
+        if (addParticle(m)) {
+          score.addedCylinder();
+        }
         frameCounter = 0;
       }
     }
