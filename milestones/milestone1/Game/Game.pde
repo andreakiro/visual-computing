@@ -74,7 +74,12 @@ void mouseClicked() {
       float xOnBoard = map(clampedMouseX, leftBorder, rightBorder, -Board.WIDTH/2, Board.WIDTH/2);
       float yOnBoard =  - Board.THICKNESS / 2;
       float zOnBoard = map(clampedMouseY, downBorder, upBorder, -Board.WIDTH/2, Board.WIDTH/2);
-      this.ps.setActive(new PVector(xOnBoard, yOnBoard, zOnBoard));
+      PVector psLocation = new PVector(xOnBoard, yOnBoard, zOnBoard);
+      PVector diff = new PVector(psLocation.x, 0, psLocation.z).sub(new PVector(sphere.getLocation().x, 0, sphere.getLocation().z));
+      if (diff.mag() < Mover.RADIUS + Cylinder.RADIUS) {
+        psLocation = diff.normalize().mult(Mover.RADIUS + Cylinder.RADIUS + 1).add(new PVector(sphere.getLocation().x, yOnBoard, sphere.getLocation().z));
+      }
+      this.ps.setActive(psLocation);
     }
   }
 }
