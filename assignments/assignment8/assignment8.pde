@@ -19,7 +19,7 @@ void draw() {
   PImage b = convolute(edges, gaussianblurkernel);
   PImage end = binaryThreshold(b, 100);
   image(end, 0, 0);*/
-  PImage blob = new BlobDetection().findConnectedComponents(img, true);
+  PImage blob = new BlobDetection().findConnectedComponents(img, false);
   image(blob, 0, 0);
 }
 
