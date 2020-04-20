@@ -5,12 +5,12 @@ void settings() {
   size(800, 600);
 }
 void setup() {
-  img = loadImage("board2.jpg");
+  img = loadImage("BlobDetection_Test.png");
   noLoop();
 }
 
 void draw() {  
-  float[][] gaussianblurkernel = {{ 9, 12, 9 },
+  /*float[][] gaussianblurkernel = {{ 9, 12, 9 },
                       { 12, 15, 12 },
                       { 9, 12, 9 }};
   PImage colorThreshold = thresholdHSB(img, 85, 145, 106, 255, 30, 150);
@@ -18,7 +18,9 @@ void draw() {
   PImage edges = scharr(colorThreshold);
   PImage b = convolute(edges, gaussianblurkernel);
   PImage end = binaryThreshold(b, 100);
-  image(end, 0, 0);
+  image(end, 0, 0);*/
+  PImage blob = new BlobDetection().findConnectedComponents(img, true);
+  image(blob, 0, 0);
 }
 
 PImage binaryThreshold(PImage img, int threshold) {
