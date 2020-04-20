@@ -5,7 +5,7 @@ void settings() {
   size(800, 600);
 }
 void setup() {
-  img = loadImage("board1.jpg");
+  img = loadImage("board2.jpg");
   noLoop();
 }
 
@@ -13,9 +13,12 @@ void draw() {
   float[][] gaussianblurkernel = {{ 9, 12, 9 },
                       { 12, 15, 12 },
                       { 9, 12, 9 }};
-  PImage conv = scharr(img);
-  print(imagesEqual(conv, loadImage("board1Scharr.bmp")));
-  image(conv, 0, 0);
+  PImage colorThreshold = thresholdHSB(img, 85, 145, 106, 255, 30, 150);
+  //PImage a = convolute(colorThreshold, gaussianblurkernel);
+  PImage edges = scharr(colorThreshold);
+  PImage b = convolute(edges, gaussianblurkernel);
+  PImage end = binaryThreshold(b, 100);
+  image(end, 0, 0);
 }
 
 PImage binaryThreshold(PImage img, int threshold) {
