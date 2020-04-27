@@ -1,26 +1,53 @@
+import processing.video.*;
+
+Capture cam;
 PImage img;
 HScrollbar thresholdBar;
 
 void settings() {
-  size(800, 600);
+  size(640, 480);
 }
 void setup() {
-  img = loadImage("BlobDetection_Test.png");
-  noLoop();
+  String[] cameras = Capture.list();
+  if (cameras.length == 0) {
+    println("There are no cameras available for capture.");
+    exit();
+  } else {
+    println("Available cameras:");
+    for (int i = 0; i < cameras.length; i++) {
+      println(cameras[i]);
+    }
+    
+    //select your predefined resolution from the list:
+    cam = new Capture(this, cameras[21]);
+    
+    cam.start();
+  }
+
+  //img = loadImage("board3.jpg");
+  //noLoop();
 }
 
-void draw() {  
-  /*float[][] gaussianblurkernel = {{ 9, 12, 9 },
+void draw() { 
+  if (cam.available() == true) {
+    cam.read();
+  }
+  img = cam.get();
+  image(img, 0, 0);
+  /*
+  image(img, 0, 0);
+  
+  float[][] gaussianblurkernel = {{ 9, 12, 9 },
                       { 12, 15, 12 },
                       { 9, 12, 9 }};
+                      
   PImage colorThreshold = thresholdHSB(img, 85, 145, 106, 255, 30, 150);
-  //PImage a = convolute(colorThreshold, gaussianblurkernel);
-  PImage edges = scharr(colorThreshold);
-  PImage b = convolute(edges, gaussianblurkernel);
-  PImage end = binaryThreshold(b, 100);
-  image(end, 0, 0);*/
-  PImage blob = new BlobDetection().findConnectedComponents(img, false);
-  image(blob, 0, 0);
+  PImage blob = new BlobDetection().findConnectedComponents(colorThreshold, true);
+  PImage blurring = convolute(blob, gaussianblurkernel);
+  PImage edges = scharr(blurring);
+  PImage filter = binaryThreshold(edges, 100);
+  new HoughTransform().drawLines(new HoughTransform().hough(filter), filter);
+  */
 }
 
 PImage binaryThreshold(PImage img, int threshold) {
