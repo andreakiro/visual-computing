@@ -1,65 +1,52 @@
-import processing.video.*;
-
-Capture cam;
 PImage img;
-HScrollbar thresholdBar;
-static final String CAMERA_NAME = "FaceTime HD Camera (Built-in)";
-
-void settings() {
-  size(800, 600);
-}
-void setup() {
-  println("before");
-  String[] cameras = Capture.list();
-  println("after");
-  if (cameras.length == 0) {
-    println("There are no cameras available for capture.");
-    exit();
-  } else {
-    println("Available cameras:");
-    for (int i = 0; i < cameras.length; i++) {
-      println(cameras[i]);
-    }
-    
-    //select your predefined resolution from the list:
-    //cam = new Capture(this, cameras[0]);
-    //cam = new Capture(this,width,height,"FaceTime HD Camera (Built In),size=1280x720,fps=30",30);
-    size(1080, 720);
-    cam = new Capture(this, width, height, CAMERA_NAME);
-    cam.start();
-    
-    cam.start();
-  }
-
-  //img = loadImage("board4.jpg");
-  //noLoop();
-}
-
-void draw() { 
-  
-  if (cam.available() == true) {
-    cam.read();
-  }
-  img = cam.get();
-  image(img, 0, 0);
-  
-  /*
-  image(img, 0, 0);
-  
-  float[][] gaussianblurkernel = {{ 9, 12, 9 },
+HoughTransform hough = new HoughTransform();
+BlobDetection blobDetection = new BlobDetection();
+QuadGraph quadGraph = new QuadGraph();
+float[][] gaussianblurkernel = {{ 9, 12, 9 },
                       { 12, 15, 12 },
                       { 9, 12, 9 }};
                       
+int imgWidth = 400;
+int imgHeight = 300;
+
+void settings() {
+  size(3 * imgWidth, 2 * imgHeight);
+}
+
+void setup() {
+  img = loadImage("board4.jpg");
+  //img.resize(imgWidth, imgHeight);
+  noLoop();
+}
+
+void draw() {   
+  // Process            
   PImage colorThreshold = thresholdHSB(img, 85, 145, 106, 255, 30, 150);
   PImage blurring = convolute(colorThreshold, gaussianblurkernel);
-  PImage blob = new BlobDetection().findConnectedComponents(blurring, true);
+  PImage blob = blobDetection.findConnectedComponents(blurring, true);
   PImage edges = scharr(blob);
   PImage filter = binaryThreshold(edges, 100);
-  List<PVector> lines = new HoughTransform().hough(filter, 10);
-  new HoughTransform().drawLines(lines, filter);
-  for(PVector p: new QuadGraph().findBestQuad(lines, width, height, 500000, 5000, false)) {
-    circle(p.x, p.y, 10);
-  }*/
+  filter.resize(imgWidth, imgHeight);
+  List<PVector> lines = hough.hough(filter, 6);
+  
+  // Draw complete processing
+  image(img, 0, 0, imgWidth, imgHeight);
+  hough.drawLines(lines, filter);
+  if (lines != null) {
+    for(PVector p: quadGraph.findBestQuad(lines, imgWidth, imgHeight, 500000, 5000, false)) {
+      circle(p.x, p.y, 10);
+    }
+  }
+  
+  // test
+  image(colorThreshold, 0, imgHeight, imgWidth, imgHeight);
+  image(blurring, imgWidth, imgHeight, imgWidth, imgHeight);
+  
+  // Draw result of edge detection
+  image(edges, imgWidth, 0, imgWidth, imgHeight);
+  
+  // Draw result of blob detection
+  image(blob, 2 * imgWidth, 0, imgWidth, imgHeight);
 }
 
 PImage binaryThreshold(PImage img, int threshold) {

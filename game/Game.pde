@@ -1,3 +1,5 @@
+ImageProcessing imgproc;
+
 // universe parameters
 private float rotx = 0;
 private float rotz = 0;
@@ -34,6 +36,10 @@ void setup() {
   this.board = new Board();
   this.sphere = new Mover(new PVector(0, Mover.Y, 0));
   this.ps = new ParticleSystem(loadShape("robotnik.obj"));
+  
+  imgproc = new ImageProcessing();
+  String[] args = {"Image processing window"};
+  PApplet.runSketch(args, imgproc);
 }
 
 /* each frames draw scene */
