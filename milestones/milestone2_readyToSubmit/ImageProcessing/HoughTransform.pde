@@ -52,18 +52,7 @@ class HoughTransform {
         }
       }
     }
-    
-    /*
-    PImage houghImg = createImage(rDim, phiDim, ALPHA);
-    for (int i = 0; i < accumulator.length; i++) {
-      houghImg.pixels[i] = color(min(255, accumulator[i]));
-    }
-    // You may want to resize the accumulator to make it easier to see:
-    houghImg.resize(400, 400);
-    houghImg.updatePixels();
-    return houghImg;
-    */
-   
+     
     List<Integer> bestCandidates = new ArrayList();
     for(int idx = 0; idx < accumulator.length; idx++) {
       if (accumulator[idx] > minVotes) {
