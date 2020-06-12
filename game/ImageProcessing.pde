@@ -2,66 +2,189 @@ import processing.video.*;
 
 class ImageProcessing extends PApplet {
   PImage img;
+  PApplet parent;
+  PVector rotation = new PVector(0, 0, 0);
+  TwoDThreeD tdtd;
+  float sampleRate = frameRate;
+  OpenCV opencv;
+  KalmanFilter2D kf1;
+  KalmanFilter2D kf2;
+  KalmanFilter2D kf3;
+  KalmanFilter2D kf4;
+  List<PVector> corners;
+  
+  PGraphics surf;
+  
+  //TDOD delete
+  PImage img2;
+  PImage img3;
+  PImage img4;
+  Movie vid;
+  
   HoughTransform hough = new HoughTransform();
   BlobDetection blobDetection = new BlobDetection();
   QuadGraph quadGraph = new QuadGraph();
-  
   float[][] gaussianblurkernel = {{ 9, 12, 9 },
                         { 12, 15, 12 },
                         { 9, 12, 9 }};
-     
-  Capture cam;
-  static final String CAMERA_NAME = "FaceTime HD Camera";
+  /*                 
+  float[][] gaussianblurkernelStronger = 
+    {{ 0.000874, 0.006976, 0.01386, 0.006976, 0.000874 },
+     { 0.006976, 0.0557, 0.110656, 0.0557, 0.006976 },
+     { 0.01386, 0.110656, 0.219833, 0.110656, 0.01386 },
+     { 0.006976, 0.0557, 0.110656, 0.0557, 0.006976 },
+     { 0.000874, 0.006976, 0.01386, 0.006976, 0.000874 }};
+  */                  
+  int imgWidth = 500;
+  int imgHeight = 300;
+  
+  ImageProcessing(PApplet p) {
+    this.parent = p;
+  }
   
   void settings() {
-    size(800, 600);
+    //size(3 * imgWidth, 1 * imgHeight);
+    size(960, 500);
   }
   
   void setup() {
-    String[] cameras = Capture.list();
-    if (cameras == null) {
-      println("Failed to retrieve the list of available cameras, will try the default...");
-      cam = new Capture(this, 640, 480);
-    } else if (cameras.length == 0) {
-      println("There are no cameras available for capture.");
-      exit();
-    } else {
-      println("Available cameras:");
-      for (int i = 0; i < cameras.length; i++) {
-        println(cameras[i]);
-      }
-      
-      //select your predefined resolution from the list:
-      cam = new Capture(this, cameras[0]);
-      cam.start();
-    }
-  
+    opencv = new OpenCV(this, 100, 100);
+    tdtd = new TwoDThreeD(width, height, sampleRate);
+    kf1 = new KalmanFilter2D();
+    kf2 = new KalmanFilter2D();
+    kf3 = new KalmanFilter2D();
+    kf4 = new KalmanFilter2D();
+    corners = new ArrayList();
+    for(int i = 0; i < 4; ++i) corners.add(new PVector(width / 2, height / 2));
+    
+    surf = createGraphics(width, height);
+    
     //img = loadImage("board1.jpg");
+    vid = new Movie(parent, "testvideo.avi");
+    vid.loop();
+    
+    //imgWidth = 500;
+    //imgHeight = 300;
+    
+    //TDOD delete
+    /*
+    img2 = loadImage("board2.jpg");
+    img3 = loadImage("board3.jpg");
+    img4 = loadImage("board4.jpg");
+    */
+   
     //noLoop();
   }
   
   void draw() { 
-    // Get
-    if (cam.available() == true) {
-      cam.read();
+    if (vid.available() == true) {
+      vid.read(); 
     }
-      
+    img = vid.get();
+    
+    surf.beginDraw();
+    surf.background(255);
+
     // Process
-    img = cam.get();             
-    PImage colorThreshold = thresholdHSB(img, 85, 145, 106, 255, 30, 150);
+    //img.resize(480, 250);
+    int minHue = 20;
+    int maxHue = 144;
+    int minSat = 22;
+    int maxSat = 255;
+    int minBri = 15;
+    int maxBri = 250;
+    if (img.width != 0 && img.height != 0) img.resize(480, 250);
+    PImage colorThreshold = thresholdHSB(img, minHue, maxHue, minSat, maxSat, minBri, maxBri);
     PImage blurring = convolute(colorThreshold, gaussianblurkernel);
     PImage blob = blobDetection.findConnectedComponents(blurring, true);
+    //PImage blurringBlob = convolute(blob, gaussianblurkernelStronger);
     PImage edges = scharr(blob);
     PImage filter = binaryThreshold(edges, 100);
-    List<PVector> lines = hough.hough(filter, 6);
+    //filter.resize(imgWidth, imgHeight);
+    List<PVector> lines = hough.hough(filter, 8);
+    // Draw complete processing
     
-    // Draw
-    background(0);
-    image(img, 0, 0);
-    hough.drawLines(lines, filter);
-    for(PVector p: quadGraph.findBestQuad(lines, width, height, 500000, 5000, false)) {
-      circle(p.x, p.y, 10);
+    //image(img, 0, 0, imgWidth, imgHeight);
+    surf.image(img, 0, 0);
+    surf.image(filter, 0, img.height);
+    hough.drawLines(lines, filter, surf);
+    if (lines != null) {
+      print("Nbr lines: "+ lines.size()+ "\n");
+  
+      fill(color(0,0, 200));
+      List<PVector> detectedCorners = quadGraph.findBestQuad(lines, img.width, img.height, 27500, 12500, false);
+      
+      if (detectedCorners.isEmpty() || frameCount % 2 != 0) {
+        corners.set(0, kf1.predict_and_correct(corners.get(0)));
+        corners.set(1, kf2.predict_and_correct(corners.get(1)));
+        corners.set(2, kf3.predict_and_correct(corners.get(2)));
+        corners.set(3, kf4.predict_and_correct(corners.get(3)));
+      } else {
+        corners.set(0, kf1.predict_and_correct(detectedCorners.get(0)));
+        corners.set(1, kf2.predict_and_correct(detectedCorners.get(1)));
+        corners.set(2, kf3.predict_and_correct(detectedCorners.get(2)));
+        corners.set(3, kf4.predict_and_correct(detectedCorners.get(3)));
+      }
+      
+      for(PVector p: corners) {
+        surf.circle(p.x, p.y, 30);
+      }
+      
+      for(PVector c : corners) {
+        c.z = 1;
+      }
+      rotation = tdtd.get3DRotations(corners);
     }
+    
+    surf.endDraw();
+    image(surf, 0, 0);
+    
+    // test
+    //image(blurring, imgWidth, imgHeight, imgWidth, imgHeight);
+    
+    
+    // Draw result of edge detection
+    // image(filter, 1 * imgWidth, 0, imgWidth, imgHeight);
+    
+    // Draw result of blob detection
+    //image(blurringBlob, 2 * imgWidth, 0, imgWidth, imgHeight);
+    
+    
+  
+    
+    /*
+    PImage colorThreshold2 = thresholdHSB(img2, minHue, maxHue, minSat, maxSat, minBri, maxBri);
+    PImage blurring2 = convolute(colorThreshold2, gaussianblurkernel);
+    PImage blob2 = blobDetection.findConnectedComponents(blurring2, true);
+    PImage edges2 = scharr(blob2);
+    
+    PImage colorThreshold3 = thresholdHSB(img3, minHue, maxHue, minSat, maxSat, minBri, maxBri);
+    PImage blurring3 = convolute(colorThreshold3, gaussianblurkernel);
+    PImage blob3 = blobDetection.findConnectedComponents(blurring3, true);
+    PImage edges3 = scharr(blob3);
+    
+    PImage colorThreshold4 = thresholdHSB(img4, minHue, maxHue, minSat, maxSat, minBri, maxBri);
+    PImage blurring4 = convolute(colorThreshold4, gaussianblurkernel);
+    PImage blob4 = blobDetection.findConnectedComponents(blurring4, true);
+    PImage edges4 = scharr(blob4);
+    
+    image(img2, 0, imgHeight, imgWidth, imgHeight);
+    image(colorThreshold2, imgWidth, imgHeight, imgWidth, imgHeight);
+    image(edges2, 2 * imgWidth, imgHeight, imgWidth, imgHeight);
+    
+    image(img3, 0, 2*imgHeight,imgWidth, imgHeight);
+    image(colorThreshold3, imgWidth, 2*imgHeight, imgWidth, imgHeight);
+    image(edges3, 2 * imgWidth, 2*imgHeight, imgWidth, imgHeight);
+    
+    image(img4, 0, 3* imgHeight, imgWidth, imgHeight);
+    image(colorThreshold4, imgWidth, 3*imgHeight, imgWidth, imgHeight);
+    image(edges4, 2 * imgWidth, 3*imgHeight, imgWidth, imgHeight);
+    */
+    
+  }
+  
+  PVector getRotation() {
+    return rotation;
   }
   
   PImage binaryThreshold(PImage img, int threshold) {
@@ -128,8 +251,8 @@ class ImageProcessing extends PApplet {
       for (int j = 0; j < kernel[i].length; j++)
         normFactor += kernel[i][j];
     
-    for (int x = 1; x < img.width - 1; x++) {
-      for (int y = 1; y < img.height - 1; y++) {
+    for (int x = kernel.length / 2; x < img.width - kernel.length /2; x++) {
+      for (int y = kernel.length / 2; y < img.height - kernel.length/2 ; y++) {
         int pixel = 0;
         for (int i = -n/2; i <= n/2; i++) {
           for (int j = -n/2; j <= n/2; j++) {

@@ -1,9 +1,15 @@
+import gab.opencv.*;
+import processing.video.*;
+
 ImageProcessing imgproc;
+Capture cam;
+static final String CAMERA_NAME = "FaceTime HD Camera";
+PImage img;
 
 // universe parameters
 private float rotx = 0;
 private float rotz = 0;
-private float rotationSensitivity = 2;
+//private float rotationSensitivity = 2;
 private boolean addingPS = false;
 
 // elements in our game
@@ -13,6 +19,7 @@ private ParticleSystem ps;
 private Score score;
 private BarChart chart;
 
+PGraphics camSurface;
 PGraphics gameSurface;
 PGraphics minimap;
 PGraphics scoreboard;
@@ -22,7 +29,8 @@ private final int SCORE_BOARD_HEIGHT = 150;
 
 /* settings for our game */
 void settings() {
-  size(700, 700, P3D);
+  size(700, 700, P3D); // Remove P3D here if you want to display the camera !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //size(700, 700);
 }
 
 /* kind of constructor for game */
@@ -35,15 +43,59 @@ void setup() {
   chart = new BarChart(score, barChart.width, barChart.height);
   this.board = new Board();
   this.sphere = new Mover(new PVector(0, Mover.Y, 0));
+ 
   this.ps = new ParticleSystem(loadShape("robotnik.obj"));
+   
   
-  imgproc = new ImageProcessing();
+  imgproc = new ImageProcessing(this);
   String[] args = {"Image processing window"};
   PApplet.runSketch(args, imgproc);
+  
+  /*
+  String[] cameras = Capture.list();
+    if (cameras == null) {
+      println("Failed to retrieve the list of available cameras, will try the default...");
+      cam = new Capture(this, 640, 480);
+    } else if (cameras.length == 0) {
+      println("There are no cameras available for capture.");
+      exit();
+    } else {
+      println("Available cameras:");
+      for (int i = 0; i < cameras.length; i++) {
+        println(cameras[i]);
+      }
+      
+      //select your predefined resolution from the list:
+      cam = new Capture(this, cameras[0]);
+      cam.start();
+    }
+  */
+  //img = loadImage("board2.jpg");
 }
 
 /* each frames draw scene */
 void draw() {
+  background(255);
+  //fill(0);
+  /*
+  if (cam.available() == true) {
+    text("yoooooooooooooooooooooo " + frameCount, 50, 690);
+    cam.read();
+  } else {
+    text("noooooooooooooooooooooo", 50, 690); 
+  }
+  img = cam.get();
+  //image(img, 0, 0);
+  */
+  
+  PVector rotation = imgproc.getRotation();
+  rotx = rotation.x;
+  rotz = rotation.y;
+  while (rotx > Math.PI / 2) rotx -= Math.PI;
+  while (rotx < -Math.PI / 2) rotx += Math.PI;
+  while (rotz > Math.PI / 2) rotz -= Math.PI;
+  while (rotz < -Math.PI / 2) rotz += Math.PI;
+  
   drawGame();
   image(gameSurface, 0, 0);
   
@@ -55,6 +107,18 @@ void draw() {
   
   drawBarChart();
   image(barChart, SCORE_BOARD_HEIGHT * 2, height - SCORE_BOARD_HEIGHT);
+  /*
+  text(rotx * 180 / Math.PI + " " + rotz * 180 / Math.PI + " " + rotation.z * 180 / Math.PI, 50, 50);
+  
+  
+  camSurface.beginDraw();
+  camSurface.image(img, 0, 0);
+  for(PVector c : corners) {
+    camSurface.circle(c.x, c.y, 10);
+  }
+  camSurface.endDraw();
+  image(camSurface, 0, 0);
+  */
 }
 
 void drawGame() {
@@ -136,6 +200,7 @@ void drawBarChart() {
   barChart.endDraw();
 }
 
+/*
 void mouseDragged() {
   if (!addingPS && !chart.getScrollbarLocked()) {
     float minLength = min(width, height);
@@ -147,6 +212,7 @@ void mouseDragged() {
     rotz = min(max(-PI/3, rotz), PI/3);
   }
 }
+*/
 
 void mouseClicked() {
   if (addingPS) {
@@ -171,11 +237,13 @@ void mouseClicked() {
   }
 }
 
+/*
 void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   rotationSensitivity += 0.1*e;
   rotationSensitivity = min(max(rotationSensitivity, 0.5), 3);
 }
+*/
 
 void keyPressed() {
   if (key == CODED) {

@@ -10,14 +10,16 @@ class BlobDetection {
     // First pass: label the pixels and store labels' equivalences
     int [] labels = new int [input.width*input.height];
     List<TreeSet<Integer>> labelsEquivalences = new ArrayList<TreeSet<Integer>>();
-    int currentLabel = -1;
+    int nextBlobLabel = -1;
     
-    for (int i = 0; i < labels.length; i++) {
+    /*
+    for (int i = 0; i < labels.length; i++) { // CHANGED
       labels[i] = Integer.MAX_VALUE;
     }
-    
+    */
     for (int y = 0; y < input.height; y++) {
       for (int x = 0; x < input.width; x++) {
+        labels[x + y*input.width] = Integer.MAX_VALUE;
         if (brightness(input.pixels[x + y*input.width]) == 255) {
           List<Integer> neighbors = new ArrayList();
           if (isInBoundAndWhite(x-1, y-1, input)) {
@@ -32,20 +34,26 @@ class BlobDetection {
           if (isInBoundAndWhite(x-1, y, input)) {
             neighbors.add(labels[x-1 + y*input.width]);
           }
-          int minLabel = currentLabel + 1;
-          for (int i = 0; i < neighbors.size(); i++) {
-            if (neighbors.get(i) < minLabel) minLabel = neighbors.get(i);
-          }
-          currentLabel = max(minLabel, currentLabel);
-          labels[x + y*input.width] = minLabel;
           
-          neighbors.add(minLabel);
-          for (int i = 0; i < neighbors.size(); i++) {
-            if (neighbors.get(i) != Integer.MAX_VALUE) {
-              if (neighbors.get(i) >= labelsEquivalences.size()) {
-                labelsEquivalences.add(new TreeSet(neighbors));
-              } else {
-                labelsEquivalences.get(neighbors.get(i)).addAll(neighbors);
+          if (neighbors.isEmpty()) {
+            nextBlobLabel += 1;
+            labels[x + y*input.width] = nextBlobLabel;
+            
+            TreeSet ts = new TreeSet();
+            ts.add(nextBlobLabel);
+            labelsEquivalences.add(ts);
+          } else {
+            int minLabel = nextBlobLabel + 1;
+            for (int nei : neighbors) { // CHANGED
+              if (nei < minLabel) minLabel = nei;
+            }
+            labels[x + y*input.width] = minLabel;
+            
+            for (int i = 0; i < neighbors.size(); i++) {
+              for (int j = 0; j < neighbors.size(); j++) {
+                //labelsEquivalences.get(neighbors.get(i)).addAll(labelsEquivalences.get(neighbors.get(j))); // CHANGED
+                labelsEquivalences.get(neighbors.get(i)).add(labelsEquivalences.get(neighbors.get(j)).first());
+
               }
             }
           }

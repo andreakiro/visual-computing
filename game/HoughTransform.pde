@@ -1,13 +1,19 @@
 import java.util.Collections;
 
 class HoughTransform {
-  private final int REGION_SIZE = 10;
+  //private final int REGION_SIZE_PHI = 1500;
+  //private final int REGION_SIZE_R = 20;
   
-  float discretizationStepsPhi = 0.06f;
+  private final int REGION_SIZE_PHI = 1500;
+  private final int REGION_SIZE_R = 5;
+  
+
+  
+  float discretizationStepsPhi = 0.05f;
   int phiDim = (int) (Math.PI / discretizationStepsPhi + 1);
-  float discretizationStepsR = 2.5f;
+  float discretizationStepsR = 0.5f;
   
-  int minVotes = 50;
+  int minVotes = 25;
   
   float[] tabSin = new float[phiDim];
   float[] tabCos = new float[phiDim];
@@ -65,12 +71,19 @@ class HoughTransform {
     */
    
     List<Integer> bestCandidates = new ArrayList();
+    
+    //int rectFactor = rDim / phiDim;
     for(int idx = 0; idx < accumulator.length; idx++) {
       if (accumulator[idx] > minVotes) {
         boolean add = true;
-        for(int i = -REGION_SIZE / 2; i < REGION_SIZE / 2; ++i) {
-          if (0 <= idx + i && idx + i < accumulator.length && i != 0)
-            add &= !(accumulator[idx + i] > accumulator[idx]);
+        for(int i = -REGION_SIZE_PHI ; i < REGION_SIZE_PHI ; ++i) {
+          for(int j =  -REGION_SIZE_R; j < REGION_SIZE_R; ++j) {
+            if (0 <= idx + i * rDim + j && idx + i * rDim + j < accumulator.length && (i != 0 || j != 0)) {
+              add &= !(accumulator[idx + i * rDim + j] > accumulator[idx]);
+            }
+            if(!add) break;
+          }
+          if(!add) break;
         }
         if (add) bestCandidates.add(idx);
       }
@@ -88,11 +101,11 @@ class HoughTransform {
       float r = (accR - (rDim) * 0.5f) * discretizationStepsR;
       float phi = accPhi * discretizationStepsPhi;
       lines.add(new PVector(r,phi));
-    } 
+    }
     return lines;
   }
   
-  void drawLines(List<PVector> lines, PImage edgeImg) {
+  void drawLines(List<PVector> lines, PImage edgeImg, PGraphics surf) {
     for (int idx = 0; idx < lines.size(); idx++) { 
       PVector line=lines.get(idx);
       float r = line.x;
@@ -103,11 +116,10 @@ class HoughTransform {
       // => y = 0 : x = r / cos(phi)
       // => x = 0 : y = r / sin(phi)
       
-      
       // compute the intersection of this line with the 4 borders of 
       // the image
       int x0 = 0;
-      int y0 = (int) (r / sin(phi));
+      int y0 = (int) (r / sin(phi + 0.000001)); //to be on the safe side
       int x1 = (int) (r / cos(phi));
       int y1 = 0;
       int x2 = edgeImg.width;
@@ -119,19 +131,19 @@ class HoughTransform {
       stroke(204,102,0); 
       if (y0 > 0) {
         if (x1 > 0)
-          line(x0, y0, x1, y1);
+          surf.line(x0, y0, x1, y1);
         else if (y2 > 0)
-          line(x0, y0, x2, y2);
+          surf.line(x0, y0, x2, y2);
         else
-          line(x0, y0, x3, y3);
+          surf.line(x0, y0, x3, y3);
       } else {
         if (x1 > 0) {
           if (y2 > 0)
-            line(x1, y1, x2, y2);
+            surf.line(x1, y1, x2, y2);
           else
-            line(x1, y1, x3, y3);
+            surf.line(x1, y1, x3, y3);
         } else {
-          line(x2, y2, x3, y3);
+          surf.line(x2, y2, x3, y3);
         }
       }
     }
