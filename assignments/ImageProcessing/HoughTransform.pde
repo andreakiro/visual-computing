@@ -1,13 +1,19 @@
 import java.util.Collections;
 
 class HoughTransform {
-  private final int REGION_SIZE = 3000;
+  //private final int REGION_SIZE_PHI = 1500;
+  //private final int REGION_SIZE_R = 20;
   
-  float discretizationStepsPhi = 0.03f;
+  private final int REGION_SIZE_PHI = 1500;
+  private final int REGION_SIZE_R = 100;
+  
+
+  
+  float discretizationStepsPhi = 0.05f;
   int phiDim = (int) (Math.PI / discretizationStepsPhi + 1);
   float discretizationStepsR = 0.5f;
   
-  int minVotes = 30;
+  int minVotes = 25;
   
   float[] tabSin = new float[phiDim];
   float[] tabCos = new float[phiDim];
@@ -65,12 +71,19 @@ class HoughTransform {
     */
    
     List<Integer> bestCandidates = new ArrayList();
+    
+    //int rectFactor = rDim / phiDim;
     for(int idx = 0; idx < accumulator.length; idx++) {
       if (accumulator[idx] > minVotes) {
         boolean add = true;
-        for(int i = -REGION_SIZE / 2; i < REGION_SIZE / 2; ++i) {
-          if (0 <= idx + i && idx + i < accumulator.length && i != 0)
-            add &= !(accumulator[idx + i] > accumulator[idx]);
+        for(int i = -REGION_SIZE_PHI ; i < REGION_SIZE_PHI ; ++i) {
+          for(int j =  -REGION_SIZE_R; j < REGION_SIZE_R; ++j) {
+            if (0 <= idx + i * rDim + j && idx + i * rDim + j < accumulator.length && (i != 0 || j != 0)) {
+              add &= !(accumulator[idx + i * rDim + j] > accumulator[idx]);
+            }
+            if(!add) break;
+          }
+          if(!add) break;
         }
         if (add) bestCandidates.add(idx);
       }

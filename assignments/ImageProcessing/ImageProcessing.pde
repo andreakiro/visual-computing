@@ -1,25 +1,41 @@
+import processing.video.*;
 PImage img;
 
 //TDOD delete
 PImage img2;
 PImage img3;
 PImage img4;
+Movie vid;
+
 HoughTransform hough = new HoughTransform();
 BlobDetection blobDetection = new BlobDetection();
 QuadGraph quadGraph = new QuadGraph();
 float[][] gaussianblurkernel = {{ 9, 12, 9 },
                       { 12, 15, 12 },
                       { 9, 12, 9 }};
-                      
-int imgWidth = 400;
+/*                 
+float[][] gaussianblurkernelStronger = 
+  {{ 0.000874, 0.006976, 0.01386, 0.006976, 0.000874 },
+   { 0.006976, 0.0557, 0.110656, 0.0557, 0.006976 },
+   { 0.01386, 0.110656, 0.219833, 0.110656, 0.01386 },
+   { 0.006976, 0.0557, 0.110656, 0.0557, 0.006976 },
+   { 0.000874, 0.006976, 0.01386, 0.006976, 0.000874 }};
+*/                  
+int imgWidth = 500;
 int imgHeight = 300;
 
 void settings() {
-  size(3 * imgWidth, 1 * imgHeight);
+  //size(3 * imgWidth, 1 * imgHeight);
+  size(1000, 1000);
 }
 
 void setup() {
-  img = loadImage("board1.jpg");
+  //img = loadImage("board1.jpg");
+  vid = new Movie(this, "testvideo.avi");
+  vid.loop();
+  
+  //imgWidth = 500;
+  //imgHeight = 300;
   
   //TDOD delete
   /*
@@ -28,44 +44,70 @@ void setup() {
   img4 = loadImage("board4.jpg");
   */
  
-  noLoop();
+  //noLoop();
 }
 
 void draw() {   
-  
+  if (vid.available() == true) {
+    vid.read(); 
+  }
+  img = vid.get();
+  background(255);
+  /*
   int minHue = 70;
   int maxHue = 143;
   int minSat = 55;
   int maxSat = 255;
   int minBri = 20;
   int maxBri = 190;
-  // Process            
+  */
+  
+  int minHue = 70;
+  int maxHue = 144;
+  int minSat = 19;
+  int maxSat = 255;
+  int minBri = 15;
+  int maxBri = 255;
+  // Process          
+  
+  //img.resize(imgWidth, imgHeight);
   PImage colorThreshold = thresholdHSB(img, minHue, maxHue, minSat, maxSat, minBri, maxBri);
   PImage blurring = convolute(colorThreshold, gaussianblurkernel);
   PImage blob = blobDetection.findConnectedComponents(blurring, true);
+  //PImage blurringBlob = convolute(blob, gaussianblurkernelStronger);
   PImage edges = scharr(blob);
   PImage filter = binaryThreshold(edges, 100);
-  filter.resize(imgWidth, imgHeight);
-  List<PVector> lines = hough.hough(filter, 6);
-  
+  //filter.resize(imgWidth, imgHeight);
+  List<PVector> lines = hough.hough(filter, 8);
   // Draw complete processing
-  image(img, 0, 0, imgWidth, imgHeight);
+  
+  //image(img, 0, 0, imgWidth, imgHeight);
+  image(img, 0, 0);
+  image(filter, 0, img.height);
   hough.drawLines(lines, filter);
   if (lines != null) {
-    for(PVector p: quadGraph.findBestQuad(lines, imgWidth, imgHeight, 500000, 5000, false)) {
-      circle(p.x, p.y, 10);
+    print("Nbr lines: "+ lines.size()+ "\n");
+
+    fill(color(0,0, 200));
+    for(PVector p: quadGraph.findBestQuad(lines, img.width, img.height, img.width * img.height, 50000, false)) {
+      circle(p.x, p.y, 30);
+      
     }
   }
+ 
   
    // test
-  //image(colorThreshold, imgWidth, 0, imgWidth, imgHeight);
   //image(blurring, imgWidth, imgHeight, imgWidth, imgHeight);
   
+  
   // Draw result of edge detection
-   image(edges, 1 * imgWidth, 0, imgWidth, imgHeight);
+  // image(filter, 1 * imgWidth, 0, imgWidth, imgHeight);
   
   // Draw result of blob detection
-  image(blob, 2 * imgWidth, 0, imgWidth, imgHeight);
+  //image(blurringBlob, 2 * imgWidth, 0, imgWidth, imgHeight);
+  
+  
+
   
   /*
   PImage colorThreshold2 = thresholdHSB(img2, minHue, maxHue, minSat, maxSat, minBri, maxBri);
@@ -95,6 +137,7 @@ void draw() {
   image(colorThreshold4, imgWidth, 3*imgHeight, imgWidth, imgHeight);
   image(edges4, 2 * imgWidth, 3*imgHeight, imgWidth, imgHeight);
   */
+  
 }
 
 PImage binaryThreshold(PImage img, int threshold) {
@@ -161,8 +204,8 @@ PImage convolute(PImage img, float[][] kernel) {
     for (int j = 0; j < kernel[i].length; j++)
       normFactor += kernel[i][j];
   
-  for (int x = 1; x < img.width - 1; x++) {
-    for (int y = 1; y < img.height - 1; y++) {
+  for (int x = kernel.length / 2; x < img.width - kernel.length /2; x++) {
+    for (int y = kernel.length / 2; y < img.height - kernel.length/2 ; y++) {
       int pixel = 0;
       for (int i = -n/2; i <= n/2; i++) {
         for (int j = -n/2; j <= n/2; j++) {
